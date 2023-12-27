@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -29,7 +30,11 @@ func init() {
 }
 
 func DrawJpg(fileUrl, colors string) {
-	fileArr := strings.Split(fileUrl, `/`)
+	sep := `/`
+	if runtime.GOOS == `windows` {
+		sep = `\`
+	}
+	fileArr := strings.Split(fileUrl, sep)
 	fileName := fileArr[len(fileArr)-1]
 	var lineColor color.RGBA
 	if val, ok := ColorMap[colors]; ok {
@@ -150,7 +155,11 @@ func abs(x int) int {
 /*- 划线png -*/
 
 func DrawPng(path, colors string) {
-	fileArr := strings.Split(path, `/`)
+	sep := `/`
+	if runtime.GOOS == `windows` {
+		sep = `\`
+	}
+	fileArr := strings.Split(path, sep)
 	fileName := fileArr[len(fileArr)-1]
 	// 读取PNG数据
 	pngData, err := ioutil.ReadFile(path)
@@ -235,7 +244,11 @@ func DrawPng(path, colors string) {
 }
 
 func DrawWebp(path, colors string) {
-	fileArr := strings.Split(path, `/`)
+	sep := `/`
+	if runtime.GOOS == `windows` {
+		sep = `\`
+	}
+	fileArr := strings.Split(path, sep)
 	fileName := fileArr[len(fileArr)-1]
 	// 打开 WebP 文件
 	file, err := os.Open(path)
