@@ -3,6 +3,7 @@ package lib
 import (
 	"bytes"
 	"fmt"
+	"github.com/chai2010/webp"
 	"image"
 	"image/color"
 	"image/draw"
@@ -231,4 +232,90 @@ func DrawPng(path, colors string) {
 	}
 
 	fmt.Println("PNG数据已成功拷贝到新的图片对象中。")
+}
+
+func DrawWebp(path, colors string) {
+	fileArr := strings.Split(path, `/`)
+	fileName := fileArr[len(fileArr)-1]
+	// 打开 WebP 文件
+	file, err := os.Open(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	// 解码 WebP 数据
+	img, err := webp.Decode(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 创建一个新的 RGBA 图像，用于绘制线条
+	bounds := img.Bounds()
+	line := image.NewRGBA(bounds)
+	draw.Draw(line, bounds, img, bounds.Min, draw.Src)
+
+	// 在图像上绘制线条
+	var lineColor color.RGBA
+	if val, ok := ColorMap[colors]; ok {
+		lineColor = val
+	} else {
+		lineColor = color.RGBA{R: 138, G: 43, A: 226}
+	}
+	x := bounds.Dx()
+	y := bounds.Dy()
+	log.Println(`图片宽高为(px)：`, x, y)
+	//line := image.NewRGBA(img.Bounds())
+	//十字线
+	drawLine(line, lineColor, image.Pt(x/2, 0), image.Pt(x/2, y))
+	drawLine(line, lineColor, image.Pt(0, y/2), image.Pt(x, y/2))
+	if x > y {
+		//横线
+		drawLine(line, lineColor, image.Pt(0, y/2+y/4), image.Pt(x, y/2+y/4))
+		drawLine(line, lineColor, image.Pt(0, y/4), image.Pt(x, y/4))
+		//竖线
+		drawLine(line, lineColor, image.Pt(x/2+y/4, 0), image.Pt(x/2+y/4, y))
+		drawLine(line, lineColor, image.Pt(x/2-y/4, 0), image.Pt(x/2-y/4, y))
+		//竖2
+		drawLine(line, lineColor, image.Pt(x/2+y/2, 0), image.Pt(x/2+y/2, y))
+		drawLine(line, lineColor, image.Pt(x/2-y/2, 0), image.Pt(x/2-y/2, y))
+		if x/2-y/2-y/4 > 0 {
+			//竖3
+			drawLine(line, lineColor, image.Pt(x/2+y/2+y/4, 0), image.Pt(x/2+y/2+y/4, y))
+			drawLine(line, lineColor, image.Pt(x/2-y/2-y/4, 0), image.Pt(x/2-y/2-y/4, y))
+		}
+	} else {
+		//竖线
+		drawLine(line, lineColor, image.Pt(x/4, 0), image.Pt(x/4, y))
+		drawLine(line, lineColor, image.Pt(x/2+x/4, 0), image.Pt(x/2+x/4, y))
+		//横线
+		drawLine(line, lineColor, image.Pt(0, y/2-x/4), image.Pt(x, y/2-x/4))
+		drawLine(line, lineColor, image.Pt(0, y/2+x/4), image.Pt(x, y/2+x/4))
+		//横线2
+		drawLine(line, lineColor, image.Pt(0, y/2-x/2), image.Pt(x, y/2-x/2))
+		drawLine(line, lineColor, image.Pt(0, y/2+x/2), image.Pt(x, y/2+x/2))
+		if y/2-x/2-x/4 > 0 {
+			//横线3
+			drawLine(line, lineColor, image.Pt(0, y/2-x/2-x/4), image.Pt(x, y/2-x/2-x/4))
+			drawLine(line, lineColor, image.Pt(0, y/2+x/2+x/4), image.Pt(x, y/2+x/2+x/4))
+		}
+	}
+	log.Println("drawLine finished.")
+	// 保存结果图片(时间戳)
+	now := time.Now().Unix()
+	nowStr := strconv.Itoa(int(now))
+	fName := nowStr + `_` + fileName
+	// 创建输出文件
+	outputFile, err := os.Create(fName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer outputFile.Close()
+
+	// 将 RGBA 图像保存为 WebP 文件
+	err = webp.Encode(outputFile, line, &webp.Options{Lossless: true})
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("已保存为 ", fName)
 }

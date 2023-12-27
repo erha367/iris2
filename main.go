@@ -18,6 +18,8 @@ func main() {
 	tail := urlArr[len(urlArr)-1]
 	if tail == "png" {
 		lib.DrawPng(url, color)
+	} else if tail == "webp" {
+		lib.DrawWebp(url, color)
 	} else {
 		lib.DrawJpg(url, color)
 	}
